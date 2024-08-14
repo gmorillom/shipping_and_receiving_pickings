@@ -1,0 +1,91 @@
+<odoo>
+  <data>
+    
+    <record id="view_stock_picking_form_inherit" model="ir.ui.view">
+        <field name="name">stock_picking.form.inherit.shipping.receiving</field>
+        <field name="model">stock.picking</field>
+        <field name="inherit_id" ref="stock.view_picking_form"/>
+        <field name="arch" type="xml">
+          <xpath expr="//field[@name='location_dest_id']" position="after">
+            <field name="require_shipping_id" invisible="1"/>
+            <field name="permit_to_edit" invisible="1"/>  
+
+            <field name="shipping_name" options="{'no_create': True}"
+              attrs="{'readonly': [('state', '!=', 'draft')], 'required':[('require_shipping_id','=',True), ('permit_to_edit','=',False)], 'invisible':[('require_shipping_id','=',False)]}"
+            />
+            <br/>
+          </xpath>
+        </field>
+    </record>
+
+
+    <!-- FORMULARIO DEL WIZARD DE RECEPCION -->
+    <record id="view_shipping_receiving_wizard_form" model="ir.ui.view">
+        <field name="name">view.shipping.receiving.wizard.form</field>
+        <field name="model">shipping.receiving.wizard</field>
+        <field name="arch" type="xml">
+          
+          <form string='Receive shipping'>
+            <div>
+              <h4>Select only one</h4>
+            </div>
+            <group name="groupleft" class="w-75">
+              <field name="stock_location_id"></field>
+              <field name="shipping_line_ids">
+                <tree editable="buttom">
+                  <field name="shipping_ref"></field>
+                  <field name="shipping_selected"></field>
+                </tree>
+              </field>
+              <!-- <field name="shipping_name"></field> -->
+            </group>
+            <footer>
+              <button name="action_confirm" type="object" class="btn btn-primary" string='Confirm' />
+            </footer>
+          </form>
+
+        </field>
+    </record>
+
+    <record id="action_view_shipping_receiving_wizard" model="ir.actions.act_window">
+        <field name="name">Receive shippings</field>
+        <field name="type">ir.actions.act_window</field>
+        <field name="res_model">shipping.receiving.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="shipping_and_receiving_pickings.view_shipping_receiving_wizard_form"/>
+        <field name="target">new</field>
+    </record>
+
+    <!-- EXTENSION DEL KANBAN DE OPERACIONES PARA AGREGAR UN BOTON QUE LANZA EL WIZARD DE RECEPCIONES -->
+    <record id="view_stock_picking_type_kanban_inh" model="ir.ui.view">
+        <field name="name">view.stock.picking.type.kanban.inh</field>
+        <field name="model">stock.picking.type</field>
+        <field name="inherit_id" ref="stock.stock_picking_type_kanban"/>
+        <field name="arch" type="xml">
+          <xpath expr="//button[@name='get_action_picking_tree_ready']" position="after">
+            <t t-if="record.code.raw_value == 'internal'">
+              <button 
+                name="action_receive_shipping" 
+                string="Receive" 
+                class="btn btn-info mt-2" 
+                type="object">Receive</button>
+            </t>
+          </xpath>
+
+          <xpath expr="//div[@class='col-6 o_kanban_card_manage_section o_kanban_manage_new']" position="replace">
+              <div class="col-6 o_kanban_card_manage_section o_kanban_manage_new" groups="base.group_erp_manager">
+                  <div role="menuitem" class="o_kanban_card_manage_title">
+                      <span>New</span>
+                  </div>
+                  <div role="menuitem">
+                      <a name="%(stock.action_picking_form)d" type="action" context="{'default_immediate_transfer': True}">Immediate Transfer</a>
+                  </div>
+                  <div role="menuitem">
+                      <a name="%(stock.action_picking_form)d" type="action">Planned Transfer</a>
+                  </div>
+              </div>
+          </xpath>
+        </field>
+    </record>
+  </data>
+</odoo>
